@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cats vs Dogs AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cat-color: #f093fb;
+      --dog-color: #fda085;
+      --accent: #f5576c;
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a1a;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── Animated gradient orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+      animation: orbFloat 8s ease-in-out infinite alternate;
+    }
+    .orb1 { width: 420px; height: 420px; background: #7b2ff7; top: -100px; left: -100px; animation-delay: 0s; }
+    .orb2 { width: 350px; height: 350px; background: #f5576c; bottom: -80px; right: -80px; animation-delay: 2s; }
+    .orb3 { width: 280px; height: 280px; background: #0ff; top: 40%; left: 60%; animation-delay: 4s; }
+
+    @keyframes orbFloat {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 40px) scale(1.1); }
+    }
+
+    /* ── Floating stickers ── */
+    .sticker {
+      position: fixed;
+      font-size: 2.4rem;
+      pointer-events: none;
+      user-select: none;
+      animation: floatSticker linear infinite;
+      opacity: 0.85;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    }
+
+    @keyframes floatSticker {
+      0%   { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 0; }
+      10%  { opacity: 0.85; }
+      90%  { opacity: 0.85; }
+      100% { transform: translateY(-10vh) rotate(360deg) scale(1.1); opacity: 0; }
+    }
+
+    /* ── Particles canvas ── */
+    #particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+    /* ── Main content ── */
+    .content { position: relative; z-index: 10; width: 100%; max-width: 560px; }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: slideDown 0.8s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-badges {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 1.5rem;
+      backdrop-filter: blur(10px);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    .badge:nth-child(2) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,87,108,0); }
+      50%       { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(245,87,108,0.15); }
+    }
+
+    .header h1 {
+      font-size: 3.2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, #f093fb, #f5576c, #fda085, #f093fb);
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    @keyframes shimmer {
+      from { background-position: 0%; }
+      to   { background-position: 200%; }
+    }
+
+    .header p {
+      margin-top: 10px;
+      color: rgba(255,255,255,0.5);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      animation: slideUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.2s both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 44px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(240,147,251,0.05), rgba(245,87,108,0.05));
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .drop-zone:hover::before, .drop-zone.dragover::before { opacity: 1; }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      transform: scale(1.01);
+      box-shadow: 0 0 30px rgba(245,87,108,0.2);
+    }
+
+    .drop-icon {
+      font-size: 3.5rem;
+      margin-bottom: 14px;
+      display: block;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    .drop-zone p { color: rgba(255,255,255,0.6); font-size: 0.95rem; }
+    .drop-zone span { color: #f5576c; font-weight: 700; }
+    .drop-hint { font-size: 0.78rem !important; margin-top: 6px; color: rgba(255,255,255,0.3) !important; }
+    #fileInput { display: none; }
+
+    /* ── Preview ── */
+    .preview-box {
+      display: none;
+      margin-top: 22px;
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      animation: zoomIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .preview-box img {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      display: block;
+      border-radius: 18px;
+      border: 2px solid var(--glass-border);
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+      border-radius: 18px;
+    }
+
+    /* ── Classify button ── */
+    .btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #7b2ff7, #f5576c, #fda085);
+      background-size: 200%;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      animation: gradientShift 3s linear infinite;
+    }
+
+    @keyframes gradientShift {
+      0%   { background-position: 0%; }
+      100% { background-position: 200%; }
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.3s;
+    }
+
+    .btn:hover:not(:disabled)::after { background: rgba(255,255,255,0.1); }
+    .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(245,87,108,0.4); }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Loader ── */
+    .loader-wrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 28px;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    .loader-ring {
+      width: 56px;
+      height: 56px;
+      position: relative;
+    }
+
+    .loader-ring::before, .loader-ring::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+
+    .loader-ring::before {
+      border-top-color: #f093fb;
+      animation: spin 1s linear infinite;
+    }
+
+    .loader-ring::after {
+      border-bottom-color: #fda085;
+      animation: spin 1.5s linear infinite reverse;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-paws {
+      font-size: 1.6rem;
+      animation: pawBounce 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pawBounce {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to   { transform: scale(1.1); opacity: 1; }
+    }
+
+    .loader-text {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+
+    /* ── Result box ── */
+    .result-box {
+      display: none;
+      margin-top: 24px;
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-box.cat-result {
+      background: linear-gradient(135deg, rgba(240,147,251,0.15), rgba(245,87,108,0.1));
+      border: 1px solid rgba(240,147,251,0.3);
+    }
+
+    .result-box.dog-result {
+      background: linear-gradient(135deg, rgba(253,160,133,0.15), rgba(245,87,108,0.1));
+      border: 1px solid rgba(253,160,133,0.3);
+    }
+
+    .result-box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 60%);
+      animation: rotateBg 8s linear infinite;
+    }
+
+    @keyframes rotateBg { to { transform: rotate(360deg); } }
+
+    .result-sticker {
+      font-size: 5rem;
+      display: block;
+      animation: resultBounce 0.6s cubic-bezier(0.22,1,0.36,1) both;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.4));
+    }
+
+    @keyframes resultBounce {
+      0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .result-label {
+      font-size: 2.4rem;
+      font-weight: 900;
+      margin: 10px 0 4px;
+      animation: fadeSlideUp 0.5s 0.2s ease both;
+      letter-spacing: -0.5px;
+    }
+
+    .result-label.cat { 
+      background: linear-gradient(90deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .result-label.dog {
+      background: linear-gradient(90deg, #fda085, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .result-sub {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+      animation: fadeSlideUp 0.5s 0.3s ease both;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* confidence bar */
+    .conf-wrap { animation: fadeSlideUp 0.5s 0.4s ease both; }
+
+    .conf-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+    }
+
+    .conf-pct { font-weight: 700; color: #fff; font-size: 0.95rem; }
+
+    .progress-bg {
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
+      position: relative;
+    }
+
+    .progress-fill.cat { background: linear-gradient(90deg, #f093fb, #f5576c); }
+    .progress-fill.dog { background: linear-gradient(90deg, #fda085, #f5576c); }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 20px; height: 100%;
+      background: rgba(255,255,255,0.4);
+      border-radius: 999px;
+      filter: blur(4px);
+      animation: glowPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1; }
+    }
+
+    /* confetti burst */
+    .confetti-wrap {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      animation: confettiFall 1.2s ease-out both;
+    }
+
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translateY(120px) rotate(720deg) scale(0); opacity: 0; }
+    }
+
+    /* ── Reset button ── */
+    .reset-btn {
+      margin-top: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.7);
+      padding: 10px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      animation: fadeSlideUp 0.5s 0.5s ease both;
+    }
+
+    .reset-btn:hover {
+      background: rgba(245,87,108,0.15);
+      border-color: var(--accent);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 28px;
+      color: rgba(255,255,255,0.2);
+      font-size: 0.78rem;
+      text-align: center;
+      animation: slideUp 0.8s 0.4s ease both;
+    }
+
+    .footer span { color: rgba(255,255,255,0.4); }
+
+    /* ── Utility ── */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- Particles -->
+  <canvas id="particles"></canvas>
+
+  <!-- Floating stickers (injected by JS) -->
+
+  <div class="content">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-badges">
+        <div class="badge">🐱</div>
+        <div class="badge">🐶</div>
+      </div>
+      <h1>Cats vs Dogs AI</h1>
+      <p>Drop an image — let the AI sniff it out 🐾</p>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+
+      <!-- Drop zone -->
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-icon">🖼️</span>
+        <p>Drag & drop your image here or <span>browse files</span></p>
+        <p class="drop-hint">PNG · JPG · JPEG · WEBP &nbsp;|&nbsp; Max 5 MB</p>
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+
+      <!-- Preview -->
+      <div class="preview-box" id="previewBox">
+        <img id="previewImg" src="" alt="Preview" />
+        <div class="preview-overlay"></div>
+      </div>
+
+      <!-- Classify button -->
+      <button class="btn" id="predictBtn" disabled>🔍 &nbsp;Classify Image</button>
+
+      <!-- Loader -->
+      <div class="loader-wrap" id="loaderWrap">
+        <div class="loader-ring"></div>
+        <div class="loader-paws">🐾</div>
+        <div class="loader-text">Sniffing the image…</div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-box" id="resultBox">
+        <div class="confetti-wrap" id="confettiWrap"></div>
+        <span class="result-sticker" id="resultSticker"></span>
+        <div class="result-label" id="resultLabel"></div>
+        <div class="result-sub" id="resultSub"></div>
+        <div class="conf-wrap">
+          <div class="conf-label">
+            <span>Confidence</span>
+            <span class="conf-pct" id="confPct"></span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill" id="progressBar"></div>
+          </div>
+        </div>
+        <button class="reset-btn" onclick="resetUI()">↺ &nbsp;Try Another Image</button>
+      </div>
+
+    </div>
+
+    <div class="footer">Powered by <span>TensorFlow</span> &amp; <span>Flask</span> &nbsp;·&nbsp; Made with 🐾</div>
+  </div>
+
+  <script>
+    /* ── Particles ── */
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H, dots = [];
+
+    function resizeCanvas() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function initDots() {
+      dots = Array.from({ length: 60 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.5,
+        dx: (Math.random() - 0.5) * 0.4,
+        dy: (Math.random() - 0.5) * 0.4,
+        alpha: Math.random() * 0.4 + 0.1
+      }));
+    }
+
+    function drawDots() {
+      ctx.clearRect(0, 0, W, H);
+      dots.forEach(d => {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${d.alpha})`;
+        ctx.fill();
+        d.x += d.dx; d.y += d.dy;
+        if (d.x < 0 || d.x > W) d.dx *= -1;
+        if (d.y < 0 || d.y > H) d.dy *= -1;
+      });
+      requestAnimationFrame(drawDots);
+    }
+
+    resizeCanvas(); initDots(); drawDots();
+    window.addEventListener('resize', () => { resizeCanvas(); initDots(); });
+
+    /* ── Floating stickers ── */
+    const stickers = ['🐱','🐶','🐾','🐱','🐶','🐾','😺','🐕','🐈','🦴','🐟','🎾'];
+
+    function spawnSticker() {
+      const el = document.createElement('div');
+      el.className = 'sticker';
+      el.textContent = stickers[Math.floor(Math.random() * stickers.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.fontSize = (Math.random() * 1.6 + 1.4) + 'rem';
+      const dur = Math.random() * 8 + 10;
+      el.style.animationDuration = dur + 's';
+      el.style.animationDelay = '0s';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000);
+    }
+
+    spawnSticker();
+    setInterval(spawnSticker, 1400);
+
+    /* ── Drop zone logic ── */
+    const dropZone   = document.getElementById('dropZone');
+    const fileInput  = document.getElementById('fileInput');
+    const previewBox = document.getElementById('previewBox');
+    const previewImg = document.getElementById('previewImg');
+    const predictBtn = document.getElementById('predictBtn');
+    const loaderWrap = document.getElementById('loaderWrap');
+    const resultBox  = document.getElementById('resultBox');
+    let selectedFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+
+    function handleFile(file) {
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = e => {
+        previewImg.src = e.target.result;
+        previewBox.style.display = 'block';
+        predictBtn.disabled = false;
+        resultBox.style.display = 'none';
+        resultBox.className = 'result-box';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* ── Predict ── */
+    predictBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      predictBtn.disabled = true;
+      loaderWrap.style.display = 'flex';
+      resultBox.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const res  = await fetch('/predict', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.error) { alert(data.error); return; }
+
+        const isDog = data.label === 'Dog';
+
+        document.getElementById('resultSticker').textContent = isDog ? '🐶' : '🐱';
+        document.getElementById('resultLabel').textContent   = data.label;
+        document.getElementById('resultLabel').className     = 'result-label ' + (isDog ? 'dog' : 'cat');
+        document.getElementById('resultSub').textContent     = isDog
+          ? 'Woof! That\'s definitely a dog! 🦴'
+          : 'Meow! That\'s definitely a cat! 🐟';
+        document.getElementById('confPct').textContent       = data.confidence + '%';
+
+        const bar = document.getElementById('progressBar');
+        bar.className = 'progress-fill ' + (isDog ? 'dog' : 'cat');
+        bar.style.width = '0%';
+
+        resultBox.className = 'result-box ' + (isDog ? 'dog-result' : 'cat-result');
+        loaderWrap.style.display = 'none';
+        resultBox.style.display  = 'block';
+
+        setTimeout(() => { bar.style.width = data.confidence + '%'; }, 120);
+
+        spawnConfetti(isDog);
+
+      } catch {
+        alert('Something went wrong. Please try again.');
+      } finally {
+        loaderWrap.style.display = 'none';
+        predictBtn.disabled = false;
+      }
+    });
+
+    /* ── Confetti burst ── */
+    function spawnConfetti(isDog) {
+      const wrap = document.getElementById('confettiWrap');
+      wrap.innerHTML = '';
+      const colors = isDog
+        ? ['#fda085','#f5576c','#ffd700','#ff8c00']
+        : ['#f093fb','#f5576c','#c471ed','#ff6ec7'];
+
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.left = (Math.random() * 200 - 100) + 'px';
+        p.style.animationDelay = (Math.random() * 0.4) + 's';
+        p.style.animationDuration = (Math.random() * 0.6 + 0.8) + 's';
+        p.style.transform = `rotate(${Math.random()*360}deg)`;
+        wrap.appendChild(p);
+      }
+    }
+
+    /* ── Reset ── */
+    function resetUI() {
+      selectedFile = null;
+      fileInput.value = '';
+      previewBox.style.display = 'none';
+      resultBox.style.display  = 'none';
+      resultBox.className = 'result-box';
+      predictBtn.disabled = true;
+      document.getElementById('progressBar').style.width = '0%';
+    }
+  </script>
+</body>
+</html>
