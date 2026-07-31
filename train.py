@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-# Load Dataset
 train_data = tf.keras.utils.image_dataset_from_directory(
     'Dataset',
     validation_split=0.2,
@@ -21,7 +20,6 @@ val_data = tf.keras.utils.image_dataset_from_directory(
     label_mode='binary'
 )
 
-#CNN Model
 model = tf.keras.Sequential([
     tf.keras.layers.Rescaling(1./255, input_shape=(128, 128, 3)),
     tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
@@ -34,13 +32,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(1, activation='sigmoid')
 ])
 
-# Compile Model
-model.compile(optimizer='adam',
-              loss='binary_crossentropy',
-              metrics=['accuracy'])
-model.fit(train_data, validation_data=val_data, epochs=100)
-
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.fit(train_data, validation_data=val_data, epochs=10)
 model.save('cat_dog_model.keras')
-
-print("Model trained and saved as cat_dog_model.keras")
-
+print("Model saved as cat_dog_model.keras")

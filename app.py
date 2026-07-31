@@ -4,7 +4,6 @@ from PIL import Image
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 
-# Use tflite-runtime on server, fallback to tensorflow.lite locally
 try:
     import tflite_runtime.interpreter as tflite
     interpreter = tflite.Interpreter(model_path='cat_dog_model.tflite')
@@ -29,8 +28,7 @@ def allowed_file(filename):
 
 def predict_image(filepath):
     img = Image.open(filepath).convert('RGB').resize((128, 128))
-    img_array = np.array(img, dtype=np.float32)
-    img_array = np.expand_dims(img_array, axis=0)
+    img_array = np.expand_dims(np.array(img, dtype=np.float32), axis=0)
     interpreter.set_tensor(input_details[0]['index'], img_array)
     interpreter.invoke()
     prediction = interpreter.get_tensor(output_details[0]['index'])[0][0]
@@ -49,11 +47,9 @@ def predict():
     file = request.files['file']
     if file.filename == '' or not allowed_file(file.filename):
         return jsonify({'error': 'Invalid file type'}), 400
-
     filename = secure_filename(file.filename)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
-
     label, confidence = predict_image(filepath)
     return jsonify({'label': label, 'confidence': confidence, 'image_url': f'/static/uploads/{filename}'})
 
