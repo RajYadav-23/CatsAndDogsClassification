@@ -14,7 +14,7 @@ static/uploads/
 .ipynb_checkpoints/
 *.ipynb
 
-# Model (large file)
+# Model files
 cat_dog_model.keras
 
 # OS
