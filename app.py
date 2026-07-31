@@ -4,12 +4,8 @@ from PIL import Image
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 
-try:
-    import tflite_runtime.interpreter as tflite
-    interpreter = tflite.Interpreter(model_path='cat_dog_model.tflite')
-except ImportError:
-    import tensorflow as tf
-    interpreter = tf.lite.Interpreter(model_path='cat_dog_model.tflite')
+import tensorflow as tf
+interpreter = tf.lite.Interpreter(model_path='cat_dog_model.tflite')
 
 interpreter.allocate_tensors()
 input_details  = interpreter.get_input_details()
